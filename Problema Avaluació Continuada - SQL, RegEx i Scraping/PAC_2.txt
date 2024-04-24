@@ -1,0 +1,57 @@
+AVALUACIÓ CONTINUADA
+PROBLEMA DE SQL, REGEX I SCRAPING
+
+Problema SQL:
+1:
+
+SELECT C.Nom, C.Cognoms, R.Data
+FROM Clients as C, Reparacions as R, Vehicles as V
+WHERE C.DNI=R.Client AND V.Matrícula=R.Vehicle AND V.Marca LIKE 'T%';
+
+2:
+
+SELECT COUNT(*) as 'NoReparacions >5000'
+FROM Reparacions
+WHERE Preu>5000;
+
+3:
+
+SELECT C.Nom, C.Cognoms, COUNT(R.Vehicle) as 'NoReparacions' 
+FROM Clients as C, Reparacions as R
+WHERE C.DNI=R.Client 
+GROUP BY R.Client
+HAVING COUNT(*)>1;
+
+
+------------------------------------------
+Problema Expressions Regulars:
+
+^\d.{4,}
+
+------------------------------------------
+Problema Scraping:
+(Codi Python)
+
+
+from urllib.request import Request, urlopen
+import urllib
+from bs4 import BeautifulSoup, element
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
+print("Exercici WebScrapping - OiED 21-22")
+print("----------------------------------")
+
+peticio = urllib.request.Request('https://www.km77.com/coches/citroen/c3/2017/estandar/informacion')
+peticio.add_header('User-agent','Mozilla/5.0')
+html= urlopen(peticio)
+htmlnet=html.read().decode()
+soup=BeautifulSoup(htmlnet,'html.parser')
+#print(soup)
+
+taula = soup.find('div', attrs={'class':'module-container d-lg-block'})
+files = taula.find_all('tr')
+for i in range(2,9):
+    info=files[i].find('td')
+    print(info.text.strip())

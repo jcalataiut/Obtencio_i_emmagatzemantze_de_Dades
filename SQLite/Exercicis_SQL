@@ -1,0 +1,83 @@
+EXERCICIS SQL
+-------------
+
+Exercici 10.
+
+
+SELECT Grup, COUNT(DISTINCT Professor) AS NProfes
+FROM DOCENCIA
+WHERE TipusDocència='Pràctiques' AND Assignatura=20350
+GROUP BY Grup;
+
+
+
+
+Exercici 11.
+
+
+SELECT Assignatura, Grup
+FROM CLASSES
+GROUP BY Assignatura, Grui
+HAVING COUNT(DISTINCT Aula) > 1;
+
+
+
+Exercici 12.
+
+SELECT 
+FROM ASSIGNATURES AS a, DOCENCIA AS d
+WHERE a.Codi=d.Assignatura AND d.TipusDocència='Teoria' AND
+        1=(SELECT COUNT(DISTINCT d.Professor)
+           FROM DOCENCIA
+           GROUP BY d.Aula)
+
+
+
+
+Exercici 14.
+
+SELECT DISTINCT Alumne
+FROM MATRICULACIO
+WHERE 1>(SELECT COUNT()
+        FROM MATRICULACIO
+        GROUP BY Assignatura)
+
+
+
+Exercici 16.
+
+SELECT DISTINCT p.Nom, p.Cognoms, d.TipusDocència
+FROM DOCENCIA AS d, ASSIGNATURES AS a, PROFESSORS AS p
+WHERE a.Codi=d.Assignatura AND d.Professor=p.DNI AND a.Nom='Bases de Dades';
+
+
+Exercici 22. 
+
+	- Mètode 1:
+
+SELECT Assignatura
+FROM CLASSES AS c, ASSIGNATURES AS a
+WHERE a.Codi=c.Assignatura AND a.Nom IS NOT 'Bases de Dades' 
+      AND c.Aula=(SELECT DISTINCT c.Aula
+                  FROM CLASSES AS c, ASSIGNATURES AS a
+                  WHERE a.Nom='Bases de Dades' AND a.Codi=c.Assignatura)
+
+
+	- Mètode 2:
+
+SELECT DISTINCT a2.Nom
+FROM ASSIGNATURES AS a1, CLASSES AS c1
+     ASSIGNATURES AS a2, CLASSES AS c2
+WHERE c1.Aula=c2.Aula AND a1.Codi=a2.Codi AND 
+      a1.Nom='Bases de Dades' AND a2.Nom IS NOT 'Bases de Dades'
+
+
+Exercici 24.
+
+SELECT Codi
+FROM AULES
+WHERE Capacitat = (SELECT MAX(Capacitat)
+                    FROM AULES)
+
+
+

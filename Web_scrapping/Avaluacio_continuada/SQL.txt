@@ -1,0 +1,13 @@
+SELECT C.Nom, C.Cognoms, R.Data
+FROM Clients as C, Reparacions as R, Vehicles as V
+WHERE C.DNI=R.Client AND V.Matrícula=R.Vehicle AND V.Marca LIKE 'T%';
+
+SELECT COUNT(*) as 'NoReparacions >5000'
+FROM Reparacions
+WHERE Preu>5000;
+
+SELECT C.Nom, C.Cognoms, COUNT(R.Vehicle) as 'NoReparacions' 
+FROM Clients as C, Reparacions as R
+WHERE C.DNI=R.Client 
+GROUP BY R.Client
+HAVING COUNT(*)>1

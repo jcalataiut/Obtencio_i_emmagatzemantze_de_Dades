@@ -1,0 +1,272 @@
+Creació de tales:
+--------------
+
+CREATE TABLE AUTONOMIES (
+    Codi   INTEGER PRIMARY KEY
+                   UNIQUE
+                   NOT NULL,
+    [Nom ] TEXT
+);
+
+
+CREATE TABLE PROVINCIES (
+    Codi      INTEGER PRIMARY KEY
+                      UNIQUE
+                      NOT NULL,
+    Nom       TEXT,
+    Autonomia INTEGER REFERENCES AUTONOMIES (Codi) 
+);
+
+
+CREATE TABLE MUNICIPIS (
+    Codi          INTEGER NOT NULL,
+    Nom           TEXT,
+    PoblacioHomes DOUBLE,
+    PoblacioDones DOUBLE,
+    Provincia     INTEGER REFERENCES PROVINCIES (Codi) 
+                          NOT NULL,
+    PRIMARY KEY (
+        Codi,
+        Provincia
+    )
+);
+
+
+--------------
+EXERCICIS
+--------------
+
+1. 
+
+SELECT COUNT(*) AS "Nombre de municipis"
+FROM MUNICIPIS
+
+2. 
+
+SELECT p.Nom, a.Nom
+FROM AUTONOMIES AS a, PROVINCIES AS p
+WHERE a.Codi=p.Autonomia
+
+3. 
+
+SELECT p.Nom, COUNT(*) AS "Municipis"
+FROM MUNICIPIS AS m, PROVINCIES AS p
+WHERE p.Codi=m.Provincia
+GROUP BY m.Provincia
+ORDER BY "Municipis" ASC;
+
+4. 
+
+CREATE TABLE SUSPENCIONS (
+    NomAutonomia   TEXT,
+    NumSuspencions INTEGER,
+    Actiu          DOUBLE,
+    Passiu         DOUBLE,
+    Autonomia      INTEGER PRIMARY KEY
+                           REFERENCES AUTONOMIES (Codi) 
+);
+
+## Per poder introduir el atribut autonomia a la taula, li vam demanar al professor Marc que ers indicara quina seria la millar forma per fer-ho. En canvi de insertar el atribut autonomies amb el codi i la relació foreing_key amb la taula autonomies, això era massa complicat i Marc ens va indicar que modificarem direcrtament la taula per tal de al crear-la insertar-ho com foreingkey i Clau primaria.
+
+
+# Quines són les comunitats que tienen els nombres erronis?
+
+SELECT A.Nom, S.NomAutonomia
+FROM SUSPENCIONS AS S, AUTONOMIES AS A
+WHERE A.Codi=S.Autonomia AND A.Nom != S.NomAutonomia
+
+-------------------------------------------------------
+
+UPDATE SUSPENCIONS
+SET NomAutonomia = (SELECT A.Nom
+                    FROM SUSPENCIONS AS S, AUTONOMIES AS A
+                    WHERE A.Codi=S.Autonomia AND A.Nom != S.NomAutonomia AND NomAutonomia!= "Comunitat Valencina")  
+WHERE NomAutonomia == (SELECT S.NomAutonomia 
+                        FROM SUSPENCIONS AS S, AUTONOMIES AS A
+                        WHERE A.Codi=S.Autonomia AND A.Nom != S.NomAutonomia AND NomAutonomia!= "Comunitat Valencina")
+
+-------------------------------------------------------
+
+## Ho fem d'acquese amanera porqué no hi ha cap manera, que nosaltres conesquem de només seleccionar el primer resulta del SELECT, ja que si posar LIMIT 1, només executa la cerca a la primera fila.
+
+-------------------------------------------------------
+
+UPDATE SUSPENCIONS
+SET NomAutonomia = (SELECT A.Nom
+                    FROM SUSPENCIONS AS S, AUTONOMIES AS A
+                    WHERE A.Codi=S.Autonomia AND A.Nom != S.NomAutonomia)  
+WHERE NomAutonomia == (SELECT S.NomAutonomia 
+                        FROM SUSPENCIONS AS S, AUTONOMIES AS A
+                        WHERE A.Codi=S.Autonomia AND A.Nom != S.NomAutonomia)
+
+-------------------------------------------------------
+
+## Hem borrat manualment la columna NomAutonomia
+
+
+5. 
+
+SELECT A.Nom, Passiu, Actiu, (Passiu - Actiu) AS Resta
+FROM AUTONOMIES AS A, SUSPENCIONS AS S
+WHERE S.Autonomia=A.Codi AND S.NumSuspencions > 9
+ORDER BY A.Nom ASC;
+
+
+6.
+
+SELECT AVG(S.NumSuspencions) AS "Mitjana de Suspencions"
+FROM SUSPENCIONS AS S, AUTONOMIES AS A
+WHERE A.Codi=S.Autonomia AND A.Nom LIKE 'CA%'
+
+
+7. 
+
+CREATE TABLE SUPERFICIE (
+    [Autonomia ] INTEGER PRIMARY KEY
+                         REFERENCES AUTONOMIES (Codi) 
+                         UNIQUE
+                         NOT NULL,
+    Superficie   DOUBLE
+);
+
+
+
+
+SELECT A.Nom, round(((SUM(M.PoblacioHomes+M.PoblacioDones)))/S.Superficie,2) AS "Densitat"
+FROM AUTONOMIES AS A, SUPERFICIE AS S, MUNICIPIS AS M, PROVINCIES AS P
+WHERE S.Superficie > 0 AND A.Codi=S.Autonomia AND A.Codi=P.Autonomia AND P.Codi=M.Provincia 
+GROUP BY A.Nom, S.Superficie
+ORDER BY round(((SUM(M.PoblacioHomes+M.PoblacioDones)))/S.Superficie,2);
+
+
+8.
+
+SELECT P.Nom AS Provincia,
+       M.Nom AS Municipi,
+       M.PoblacioHomes AS Homes,
+       M.PoblacioDones AS Dones,
+       (M.PoblacioHomes + M.PoblacioDones) AS Total,
+       round(M.PoblacioHomes / (M.PoblacioHomes + M.PoblacioDones)*100, 2) AS [%Homes],
+       round(M.PoblacioDones / (M.PoblacioHomes + M.PoblacioDones)*100, 2) AS [%Dones]
+  FROM AUTONOMIES AS A,
+       MUNICIPIS AS M,
+       PROVINCIES AS P
+ WHERE A.Codi = P.Autonomia AND 
+       P.Codi = M.Provincia AND 
+       A.Nom == "Catalunya" AND 
+       (M.PoblacioHomes + M.PoblacioDones) > 5000
+ ORDER BY (M.PoblacioHomes + M.PoblacioDones) DESC;
+
+
+9. 
+
+ALTER TABLE SUSPENCIONS ADD Rangs TEXT;
+
+UPDATE SUSPENCIONS
+SET Rangs = "0-9"
+WHERE NumSuspencions>=0 AND NumSuspencions<10;
+
+UPDATE SUSPENCIONS
+SET Rangs = "10-19"
+WHERE NumSuspencions>=10 AND NumSuspencions<20;
+
+UPDATE SUSPENCIONS
+SET Rangs = "20-29"
+WHERE NumSuspencions>=20 AND NumSuspencions<30;
+
+UPDATE SUSPENCIONS
+SET Rangs = "30-39"
+WHERE NumSuspencions>=30 AND NumSuspencions<40;
+
+UPDATE SUSPENCIONS
+SET Rangs = "40-49"
+WHERE NumSuspencions>=40 AND NumSuspencions<50;
+
+UPDATE SUSPENCIONS
+SET Rangs = "50-59"
+WHERE NumSuspencions>=50 AND NumSuspencions<60;
+
+UPDATE SUSPENCIONS
+SET Rangs = "60-69"
+WHERE NumSuspencions>=60 AND NumSuspencions<70;
+
+UPDATE SUSPENCIONS
+SET Rangs = "70-79"
+WHERE NumSuspencions>=70 AND NumSuspencions<80;
+
+UPDATE SUSPENCIONS
+SET Rangs = "80-89"
+WHERE NumSuspencions>=80 AND NumSuspencions<90;
+
+UPDATE SUSPENCIONS
+SET Rangs = "90-100"
+WHERE NumSuspencions>=90 AND NumSuspencions<=100;
+
+SELECT Rangs, COUNT(*)
+FROM SUSPENCIONS
+GROUP BY Rangs;
+
+
+
+
+
+-------------------------------------
+
+CREATE TABLE RANGS (
+    Intervals TEXT,
+    NumSuspen      DEFAULT (0) 
+);
+
+
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "0-9", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "0-9";
+
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "10-19", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "10-19";
+
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "20-29", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "20-29";
+
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "30-39", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "30-39";
+
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "40-49", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "40-49";
+ 
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "50-59", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "50-59";
+ 
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "60-69", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "60-69";
+ 
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "70-79", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "70-79";
+ 
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "80-89", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "80-89";
+ 
+INSERT INTO RANGS (Intervals,NumSuspen)
+ SELECT "90-100", COUNT(*)
+ FROM SUSPENCIONS AS S
+ WHERE S.Rangs = "90-100";
+
+SELECT *
+FROM RANGS
